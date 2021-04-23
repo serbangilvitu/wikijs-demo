@@ -114,3 +114,27 @@ What can be observed is:
 * image is running as user `node`
 * image is based on Alpine Linux
 * entrypoint looks minimal - can be checked using `docker run -it --rm docker.io/requarks/wiki:2.5 cat /usr/local/bin/docker-entrypoint.sh`
+
+### nginx-ingress
+#### Prerequisites
+```
+helm repo add nginx-stable https://helm.nginx.com/stable
+helm repo update
+helm search repo nginx-stable/nginx-ingress
+helm show values nginx-stable/nginx-ingress --version 0.9.1 > helm/nginx-ingress/original-values.yaml
+```
+
+#### Deployment
+```
+helm upgrade -i ni nginx-stable/nginx-ingress \
+  --version 0.9.1 \
+  --values helm/nginx-ingress/values.yaml
+```
+
+#### Accessing the application
+1. To access the application without creating a DNS record (as this is just for test purposes), add an entry in `/etc/hosts` for one of the Kubernetes nodes, using the following command
+```
+echo $(kubectl get pod -l app=ni-nginx-ingress -o jsonpath='{.items[0].status.hostIP}') wiki.local | sudo tee -a /etc/hosts
+```
+
+2. wiki.js can now be accessed at http://wiki.local:30080/
