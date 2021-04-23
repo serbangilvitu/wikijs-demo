@@ -1,0 +1,95 @@
+# For all pgbouncer config, please check https://www.pgbouncer.org/config.html
+# Deployment values for pgbouncer
+replicaCount: 1
+internalPort: 5432
+servicePort: 5432
+antiAffinity: soft
+nodeAffinity: {} # optionally define nodeAffinity
+tolerations: [] # optionally define tolerations
+nodeSelector: {} # optionally define nodeSelector
+
+poolMode: session
+
+budget:
+  # PodDisruptionBudget spec.minAvailable
+  minAvailable: 0
+
+image:
+  repository: cradlepoint/pgbouncer
+  tag: 1.0.1
+  pullPolicy: Always
+
+imagePullSecrets: []
+
+databases: {}
+#  name:
+#    host: host
+#    port: port
+#    user: user
+#    dbname: dbname
+#    auth_user: pgbouncer
+
+
+# list of users to connect to database, You can get by running this query
+# psql -Atq -U postgres -d postgres -c "SELECT concat('\"', usename, '\" \"', passwd, '\"') FROM pg_shadow"
+users: {}
+#  username: password
+
+# Custom pgbouncer.ini
+settings:
+  auth_type: plain
+  #  use when you need need to get md5 password hashes for database users, for more information please check https://www.2ndquadrant.com/en/blog/pg-phriday-securing-pgbouncer/
+
+  #  CREATE SCHEMA pgbouncer AUTHORIZATION pgbouncer;
+  #  CREATE OR REPLACE FUNCTION pgbouncer.get_auth(p_usename TEXT)
+  #  RETURNS TABLE(username TEXT, password TEXT) AS
+  #  $$
+  #  BEGIN
+  #  RAISE WARNING 'PgBouncer auth request: %', p_usename;
+  #  RETURN QUERY
+  #  SELECT usename::TEXT, passwd::TEXT FROM pg_catalog.pg_shadow
+  #  WHERE usename = p_usename;
+  #  END;
+  #  $$ LANGUAGE plpgsql SECURITY DEFINER;
+  auth_query: SELECT * FROM pgbouncer.get_auth($1) 
+
+connectionLimits:
+  maxClientConn: 200
+  defaultPoolSize: 200
+  minPoolSize: 15
+  reservePoolSize: 25
+  reservePoolTimeout: 5
+
+spec:
+  labels: {}
+  annotations:
+    {}
+    # Add custom pod annotations here
+    # Annotations are converted to a JSON string and run through
+    # the helm `tpl` function. Then converted back to a map and
+    # rendered as YAML. This allows usage of go template directives
+    # in your annotations.
+
+# Add custom deployment labels here
+labels: {}
+
+logConnections: 0
+logDisconnections: 0
+logStats: 0
+logPoolerErrors: 1
+verbose: 0
+statsPeriod: 60
+
+# add key: value map entries to customSettings to be added to pbgouncer.ini [pgbouncer] section
+customSettings: {}
+
+# Service configuration
+service:
+  enabled: true
+  type: ClusterIP
+  name: ""
+  annotations: {}
+
+global:
+  # optionally use namespace as dbname
+  namespacedDatabases: false

@@ -16,6 +16,8 @@ docker-compose rm
 For each chart the `original-values.yaml` file will contain the default values, which will make it easier to compare with `values.yaml` and get the diff.
 
 ### Postgres
+More information regarding the paramters can be found [here](https://artifacthub.io/packages/helm/bitnami/postgresql)
+
 #### Deployment
 Create a Postgres DB using a Helm chart.
 Specifying an exact chart version will help with future upgrades and ensure the same version is rolled out across clusters.
@@ -32,13 +34,43 @@ kubectl create secret generic postgres \
 ```
 
 ```
-helm install pg bitnami/postgresql \
+helm upgrade -i pg bitnami/postgresql \
     --version 10.3.18 \
     --values helm/postgres/values.yaml
 ```
-#### Connecting to the database
+#### (Optional) Connect to the database
 ```
 export POSTGRES_PASSWORD=$(kubectl get secret --namespace default postgres -o jsonpath="{.data.postgresql-password}" | base64 --decode)
 
 kubectl run pg-postgresql-client --rm --tty -i --restart='Never' --namespace default --image docker.io/bitnami/postgresql:11.11.0-debian-10-r71 --env="PGPASSWORD=$POSTGRES_PASSWORD" --command -- psql --host pg-postgresql -U postgres -d postgres -p 5432
 ```
+
+### pgbouncer
+The [original helm chart](
+https://github.com/cradlepoint/kubernetes-helm-chart-pgbouncer/tree/master/pgbouncer) was copied in this repository for convenience.
+
+The version used is [v1.0.11](https://github.com/cradlepoint/kubernetes-helm-chart-pgbouncer/archive/refs/tags/v1.0.11.tar.gz)
+
+I added a parameter named `createUsersSecret` which controlls whether the secret containing the config will be created.
+This is set to false, to avoid comitting credentials in git.
+
+#### Prerequisites
+Use `helm template` to generate the secret and apply it with `kubectl`.
+1. Run `helm template`
+```
+helm template pgb helm/pgbouncer/ \
+    --values helm/pgbouncer/values.yaml \
+    --output-dir=out \
+    --set createUsersSecret=true \
+    --set users.postgres='wikijsrocks'
+```
+2. Apply the rendered secret yaml
+```
+kubectl apply -f out/pgbouncer/templates/secret-pgbouncer-configfiles.yaml
+```
+
+#### Deployment
+```
+helm upgrade -i pgb helm/pgbouncer/ --values helm/pgbouncer/values.yaml
+```
+
