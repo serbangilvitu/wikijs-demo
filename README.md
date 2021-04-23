@@ -102,3 +102,15 @@ Expose the service on port http://localhost:8080
 ```
 kubectl port-forward svc/wiki 8080:80
 ```
+
+#### (Optional) Inspecting the Dockerfile
+I couldn't find the actual Dockerfile used to create the images which are being published, though there is a [dev Dockerfile](https://github.com/Requarks/wiki/blob/dev/dev/containers/Dockerfile).
+To have a look at the way the image was built, [dfimage](https://hub.docker.com/r/alpine/dfimage) can be used
+```
+alias dfimage="docker run -v /var/run/docker.sock:/var/run/docker.sock --rm alpine/dfimage"
+dfimage docker.io/requarks/wiki:2.5
+```
+What can be observed is:
+* image is running as user `node`
+* image is based on Alpine Linux
+* entrypoint looks minimal - can be checked using `docker run -it --rm docker.io/requarks/wiki:2.5 cat /usr/local/bin/docker-entrypoint.sh`
