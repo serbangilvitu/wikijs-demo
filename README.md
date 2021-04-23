@@ -42,7 +42,7 @@ helm upgrade -i pg bitnami/postgresql \
 ```
 export POSTGRES_PASSWORD=$(kubectl get secret --namespace default postgres -o jsonpath="{.data.postgresql-password}" | base64 --decode)
 
-kubectl run pg-postgresql-client --rm --tty -i --restart='Never' --namespace default --image docker.io/bitnami/postgresql:11.11.0-debian-10-r71 --env="PGPASSWORD=$POSTGRES_PASSWORD" --command -- psql --host pg-postgresql -U postgres -d postgres -p 5432
+kubectl run pg-postgresql-client --rm --tty -i --restart='Never' --namespace default --image docker.io/bitnami/postgresql:11.11.0-debian-10-r71 --env="PGPASSWORD=$POSTGRES_PASSWORD" --command -- psql --host pg-postgresql -U postgres -d postgres -p 5432 -c 'CREATE DATABASE wiki'
 ```
 
 ### pgbouncer
@@ -74,3 +74,31 @@ kubectl apply -f out/pgbouncer/templates/secret-pgbouncer-configfiles.yaml
 helm upgrade -i pgb helm/pgbouncer/ --values helm/pgbouncer/values.yaml
 ```
 
+### wiki.js
+The original chart can be found [here](https://github.com/Requarks/wiki/tree/dev/dev/helm)
+
+Customized the chart to create the postgres secret only when `postgres.createSecret` is set to `true`.
+
+#### Prerequisites
+Use `helm template` to generate the `wiki` secret and apply it with `kubectl`.
+1. Run `helm template`
+```
+helm template wiki helm/wikijs/ \
+    --values helm/wikijs/values.yaml \
+    --output-dir=out \
+    --set postgresql.createSecret=true \
+    --set postgresql.postgresqlPassword='wikijsrocks'
+```
+2. Apply the rendered secret yaml
+```
+kubectl apply -f out/wiki/templates/secret.yaml
+```
+#### Deployment
+```
+helm upgrade -i wiki helm/wikijs/ --values helm/wikijs/values.yaml
+```
+#### (Optional) Test using port forwarding
+Expose the service on port http://localhost:8080
+```
+kubectl port-forward svc/wiki 8080:80
+```

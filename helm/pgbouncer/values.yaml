@@ -1,6 +1,6 @@
 # For all pgbouncer config, please check https://www.pgbouncer.org/config.html
 # Deployment values for pgbouncer
-replicaCount: 3
+replicaCount: 1
 internalPort: 5432
 servicePort: 5432
 antiAffinity: soft
@@ -22,11 +22,11 @@ image:
 imagePullSecrets: []
 
 databases:
- postgres:
+ wiki:
    host: pg-postgresql
    port: 5432
    user: postgres
-   dbname: postgres
+   dbname: wiki
    auth_user: postgres
 
 
