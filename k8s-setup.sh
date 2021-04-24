@@ -70,7 +70,9 @@ helm template wiki helm/wikijs/ \
 
 kubectl apply -f out/wiki/templates/secret.yaml
 
-helm upgrade -i wiki helm/wikijs/ --values helm/wikijs/values.yaml
+helm upgrade -i wiki helm/wikijs/ \
+    --values helm/wikijs/values.yaml \
+    --set ingress.hosts[0].host=${WIKI_INGRESS_HOSTNAME}
 
 # nginx-ingress
 helm upgrade -i ni nginx-stable/nginx-ingress \
