@@ -74,7 +74,7 @@ helm upgrade -i pg bitnami/postgresql \
     --version 10.3.18 \
     --values helm/postgres/values.yaml
 ```
-#### (Optional) Connect to the database
+#### Create the database
 ```
 export POSTGRES_PASSWORD=$(kubectl get secret --namespace default postgres -o jsonpath="{.data.postgresql-password}" | base64 --decode)
 
