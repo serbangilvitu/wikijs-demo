@@ -13,6 +13,42 @@ docker-compose rm
 ```
 
 ## Kubernetes
+### Setup using a script
+To setup using the demo script just run
+```
+./k8s-setup.sh
+```
+
+The Postgres password will default to `wikijsrocks` and the ingress hostname to `wiki.local`
+
+If you want to customize these values, set the following variables
+```
+WIKI_DB_PASSWORD=s0mepwd \
+WIKI_INGRESS_HOSTNAME=wiki.example.com \
+./k8s-setup.sh
+```
+### Accessing the application
+#### Port forwarding
+```
+kubectl port-forward svc/wiki 8080:80
+```
+The service is now accessible at http://localhost:8080/
+
+#### Create a load balancer and add a DNS record
+If you're running this on the cloud, values.yaml for nginx-ingress and change the type from `NodePort` to `LoadBalancer` and a load balancer will be created.
+
+Add a DNS record for that load balancer matching INGRESS_HOSTNAME.
+
+#### Add entry in /etc/hosts
+1. To access the application without creating a DNS record (as this is just for test purposes), add an entry in `/etc/hosts` for one of the Kubernetes nodes, using the following command
+```
+echo $(kubectl get pod -l app=ni-nginx-ingress -o jsonpath='{.items[0].status.hostIP}') wiki.local | sudo tee -a /etc/hosts
+```
+
+2. wiki.js can now be accessed at http://wiki.local:30080/
+
+### Manual setup
+The following steps are not required if `k8s-setup.sh` was used.
 For each chart the `original-values.yaml` file will contain the default values, which will make it easier to compare with `values.yaml` and get the diff.
 
 ### Postgres
@@ -130,11 +166,3 @@ helm upgrade -i ni nginx-stable/nginx-ingress \
   --version 0.9.1 \
   --values helm/nginx-ingress/values.yaml
 ```
-
-#### Accessing the application
-1. To access the application without creating a DNS record (as this is just for test purposes), add an entry in `/etc/hosts` for one of the Kubernetes nodes, using the following command
-```
-echo $(kubectl get pod -l app=ni-nginx-ingress -o jsonpath='{.items[0].status.hostIP}') wiki.local | sudo tee -a /etc/hosts
-```
-
-2. wiki.js can now be accessed at http://wiki.local:30080/
